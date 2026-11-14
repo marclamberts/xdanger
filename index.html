@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xDanger</title>
+<meta name="description" content="xDanger: one ecosystem for shot models, possession value and ratings. A short, visual explanation of how the models work.">
+<meta property="og:title" content="xDanger: one ecosystem for shot models, possession value and ratings">
+<meta property="og:description" content="Nine probability models, one unit, every action on the pitch. How xDanger works, in one page.">
+<meta property="og:image" content="img/06_xdanger.png">
+<style>
+  :root { --canvas:#E7ECEE; --paper:#F4F6F7; --ink:#1A2226; --muted:#55666B; --hair:#CBD6D9; --track:#D9E1E4;
+          --coral:#E8794C; --teal:#3F8F6E; --blue:#4C7A93; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --canvas:#14202B; --paper:#1B2733; --ink:#F2EFE6; --muted:#A8A6A0;
+      --hair:#384653; --track:#27313D; }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--canvas); }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 18px/1.65 Georgia, "Times New Roman", serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 20px 80px; }
+  header .eyebrow { font: 600 12px/1 "Helvetica Neue", Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase;
+                    color: var(--coral); }
+  h1 { font-weight: 400; font-size: clamp(32px, 6vw, 46px); line-height: 1.12; margin: 14px 0 12px; }
+  .lede { font-size: 20px; color: var(--muted); margin: 0 0 18px; }
+  .byline { font: 14px/1.5 "Helvetica Neue", Arial, sans-serif; color: var(--muted); }
+  .byline a { color: var(--ink); }
+  h2 { font: 600 22px/1.3 "Helvetica Neue", Arial, sans-serif; margin: 56px 0 12px; padding-top: 14px;
+       border-top: 3px solid var(--coral); }
+  h2 .n { color: var(--coral); margin-right: 8px; }
+  p { margin: 0 0 16px; }
+  figure { margin: 24px 0 28px; }
+  figure img { width: 100%; display: block; border-radius: 4px; border: 1px solid var(--hair); background: #E7ECEE; }
+  figcaption { font: 13.5px/1.45 "Helvetica Neue", Arial, sans-serif; color: var(--muted); margin-top: 8px; }
+  .math { font-size: 21px; text-align: center; margin: 18px 0 20px; padding: 14px; background: var(--paper);
+          border-radius: 6px; overflow-x: auto; }
+  .box { background: var(--paper); border-left: 3px solid var(--teal); padding: 16px 20px; border-radius: 0 6px 6px 0;
+         margin: 20px 0; font: 16px/1.55 "Helvetica Neue", Arial, sans-serif; }
+  .box b { font-weight: 600; }
+  /* calculator */
+  .calc { background: var(--paper); border-radius: 8px; padding: 18px 20px 20px; margin: 24px 0;
+          font: 15px/1.5 "Helvetica Neue", Arial, sans-serif; }
+  .calc h3 { margin: 0 0 4px; font-size: 16px; }
+  .calc .hint { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+  .shots { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .shot { display: flex; align-items: center; gap: 6px; background: var(--track); padding: 6px 8px; border-radius: 6px; }
+  .shot input { width: 64px; font: inherit; padding: 4px 6px; border: 1px solid var(--hair); border-radius: 4px;
+                background: var(--canvas); color: var(--ink); }
+  .shot button, .calc .add { font: inherit; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+  .calc .add { background: var(--track); padding: 6px 12px; border-radius: 6px; color: var(--ink); }
+  .out { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .out div { background: var(--canvas); border-radius: 6px; padding: 10px 12px; }
+  .out b { display: block; font: 400 26px/1.1 Georgia, serif; }
+  .out span { color: var(--muted); font-size: 13px; }
+  .bad b { color: var(--coral); } .good b { color: var(--teal); }
+  ul { padding-left: 1.2em; margin: 0 0 16px; } li { margin: 4px 0; }
+  .links a { color: var(--ink); }
+  footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--hair);
+           font: 13px/1.6 "Helvetica Neue", Arial, sans-serif; color: var(--muted); }
+  a { color: var(--blue); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Waltzing Analytics · Football models</div>
+  <h1>xDanger: one ecosystem for shot models, possession value and ratings</h1>
+  <p class="lede">Nine probability models, one unit, every action on the pitch. This page is the short version of how it works.</p>
+  <p class="byline">By <a href="https://medium.com/p/a00f51663a1d">Marc Lamberts</a> · November 2026 · IMPECT event data ·
+    Examples: Bundesliga 2026–27</p>
+</header>
+
+<h2><span class="n">1</span>The problem</h2>
+<p>Expected goals tells you how good a shot was. But a Bundesliga match has about 3,000 on-ball events and fewer than
+30 shots, so xG only ever looks at one row in a hundred. Everything that decided whether the chance existed happened
+before it.</p>
+<figure><img src="img/02_problem.png" alt="Events per team per match: passes, receptions and carries dwarf shots" loading="lazy">
+<figcaption>On-ball events per team per match. A shot model only values the coral bar.</figcaption></figure>
+<p>There are good models for the rest: expected threat, VAEP, goals added, on-ball value. I kept running into the same
+wall using them together, though. They don't share a unit, they don't feed into each other, and most of them stop at
+the shot. xDanger is my attempt to put all of it in one system.</p>
+
+<h2><span class="n">2</span>One question per model</h2>
+<p>Every part of xDanger answers exactly one yes/no question about the near future, at one moment, using only what was
+known at that moment. So every output is a probability, and every probability can be checked against what happened.</p>
+<figure><img src="img/03_chain.png" alt="The five model families and the question each answers" loading="lazy">
+<figcaption>Shot, possession, conceding, pass and rating. Each feeds the next.</figcaption></figure>
+<div class="box">
+<b>Shot model.</b> Is the shot a goal (xG)? Does the attack score after it (xDanger)? Given where it went, does it go in
+(xGOT, PSxG)? Does my team shoot in the next 15 seconds (xShot)?<br>
+<b>Possession model.</b> Does my team score in the next 15 seconds?<br>
+<b>Conceding model.</b> Does the opponent score in the next 15 seconds?<br>
+<b>Pass model.</b> Does the pass reach a team-mate?<br>
+<b>Rating.</b> Net value + xGOT + goals prevented, compared with the position baseline, on a 0–10 scale.
+</div>
+
+<h2><span class="n">3</span>Learn from xG, not from goals</h2>
+<p>Goals follow about one action in a thousand, which is far too rare to learn from directly. So the possession and
+conceding models learn from the xG of the shots that follow an action within 15 seconds. The label is the chance that
+at least one of those shots goes in:</p>
+<div class="math">label = 1 − ∏<sub>shots in next 15 s</sub> (1 − xG<sub>shot</sub>)</div>
+<figure><img src="img/04_label.png" alt="Two shots of 0.10 and 0.30 within 15 seconds give a label of 0.37" loading="lazy">
+<figcaption>Two shots of 0.10 and 0.30 give 1 − (0.9 × 0.7) = 0.37. A third shot after 15 seconds doesn't count.</figcaption></figure>
+<p>The xG used here is out-of-fold: every shot gets its xG from a model that never saw that shot's match, so nothing
+further down the chain learns from numbers that are slightly too good.</p>
+
+<div class="calc" id="calc">
+  <h3>Try it: one attack, several shots</h3>
+  <p class="hint">Enter the xG of each shot in one attack. Adding them up over-counts, because a rebound only exists when
+  the first shot missed. The attack can only score once.</p>
+  <div class="shots" id="shots"></div>
+  <button class="add" id="add" type="button">+ add a shot</button>
+  <div class="out" style="margin-top:14px">
+    <div class="bad"><b id="sum">0.00</b><span>xG added up shot by shot</span></div>
+    <div class="good"><b id="att">0.00</b><span>chance the attack scores: 1 − ∏(1 − xG)</span></div>
+    <div><b id="gap">0%</b><span>over-count from adding</span></div>
+  </div>
+</div>
+
+<h2><span class="n">4</span>Value added, action by action</h2>
+<p>Once every action has a value, crediting a player is a subtraction: value after the action minus value before it.
+Receptions go back to the passer, ball wins count as value won, shots are left to the shot model, and restarts start
+from their own baseline.</p>
+<figure><img src="img/05_one_attack.png" alt="Hoffenheim against Stuttgart: possession value after each action of the goal" loading="lazy">
+<figcaption>Hoffenheim 2–1 Stuttgart, 12 September 2026. Two carries (+0.012 and +0.173) build most of the danger; the
+finish itself was average for the chance.</figcaption></figure>
+<p>Run the same subtraction on the conceding model and you get each action's effect on the opponent's chances. Put them
+together and you get net value:</p>
+<div class="math">Δ net value = Δ possession value (attack) − Δ conceding value (risk)</div>
+<p>That is the number the rating is built on, because it is the only one that puts attacking and defending in the
+same unit.</p>
+
+<h2><span class="n">5</span>The shot isn't the end of the attack</h2>
+<p>xG asks whether this shot goes in. xDanger asks whether the team scores from this shot or anything after it before
+the attack ends: the parried save, the second ball after a block, the corner won from a deflection.</p>
+<figure><img src="img/06_xdanger.png" alt="xG and xDanger per shot by zone" loading="lazy">
+<figcaption>Per shot, long shots gain the most relative to their xG (+47%), six-yard shots the least (+8%). Counted once
+per attack, Bundesliga attacks carry 12% more danger than their xG.</figcaption></figure>
+<p>One thing I learned the hard way: count it per attack. Added shot by shot, the Bundesliga season so far comes to 285
+xG and 331 xDanger. Counted per attack it's 275 and 307, and the 275 matches the 274 goals actually scored.</p>
+
+<h2><span class="n">6</span>Does it work?</h2>
+<p>Everything is trained on 71 IMPECT league-seasons (2024 to 2025–26, 59.5 million events) and tested on 2026–27
+matches that no model had seen.</p>
+<figure><img src="img/07_validation.png" alt="AUC and expected/real per model part on held-out matches" loading="lazy">
+<figcaption>AUC per part (0.5 = coin flip) and expected / real (1.00 = totals add up). The Bundesliga sits right on the
+average.</figcaption></figure>
+
+<h2><span class="n">7</span>Which numbers can you trust?</h2>
+<p>Split every player's matches into odd and even and correlate the two halves. Style and volume repeat; finishing
+doesn't, at least not over half a season.</p>
+<figure><img src="img/08_reliability.png" alt="Split-half reliability per metric" loading="lazy">
+<figcaption>894 players with 360+ minutes in each half. Pass difficulty r = 0.87, xShot created 0.83, finishing 0.02.</figcaption></figure>
+
+<h2><span class="n">8</span>Players, teams and luck</h2>
+<figure><img src="img/09_olise.png" alt="Michael Olise percentiles across the five models" loading="lazy">
+<figcaption>A profile, not a total: Olise is the league's best creator and shooter among wingers, and loses the ball 16
+times per 90.</figcaption></figure>
+<p>The same attack probabilities give every match a distribution of results, and so expected points. Luck is points
+minus expected points; entropy is how open a match was before the goals went in.</p>
+<figure><img src="img/109_luck_entropy.png" alt="Points vs expected points and match entropy per Bundesliga team" loading="lazy">
+<figcaption>Dortmund +5.2 points above expectation, Gladbach −6.1. Bayern's matches are the most decided (0.71 bits).</figcaption></figure>
+
+<h2><span class="n">9</span>How to use it</h2>
+<figure><img src="img/10_how_to_use.png" alt="Which metric answers which question" loading="lazy">
+<figcaption>Start from the question, not the metric.</figcaption></figure>
+<ul>
+  <li>Below about 450 minutes, don't rank anyone on a single metric.</li>
+  <li>For teams and attacks, use attack-level xG and xDanger, 1 − ∏(1 − p), never the sum of shots.</li>
+  <li>Treat finishing and keeping as context, not verdicts.</li>
+  <li>It's event data: off-ball runs and defensive shape are invisible, and value added is association, not causation.</li>
+</ul>
+
+<h2><span class="n">10</span>Read more</h2>
+<ul class="links">
+  <li><a href="https://medium.com/p/a00f51663a1d">The full article on Medium</a>: every model, the training, the testing
+    and three Bundesliga case studies.</li>
+  <li><a href="papers/xdanger-one-pager.pdf">One-page summary (PDF)</a></li>
+  <li><a href="papers/xdanger-paper.pdf">Academic paper with the methods and results (PDF)</a></li>
+</ul>
+
+<footer>
+  Built on the shoulders of xT (Karun Singh), VAEP (Decroos et al.), goals added (American Soccer Analysis), OBV
+  (StatsBomb) and EPV (Fernández, Bornn &amp; Cervone). Data: IMPECT. Models, charts and text: Marc Lamberts, Waltzing
+  Analytics.
+</footer>
+</main>
+<script>
+(function () {
+  var shots = [0.02, 0.68, 0.89];
+  var box = document.getElementById('shots');
+  function render() {
+    box.innerHTML = '';
+    shots.forEach(function (v, i) {
+      var d = document.createElement('div'); d.className = 'shot';
+      d.innerHTML = '<span>Shot ' + (i + 1) + '</span><input type="number" min="0" max="0.99" step="0.01" value="' + v + '">' +
+        (shots.length > 1 ? '<button type="button" aria-label="Remove shot">×</button>' : '');
+      d.querySelector('input').addEventListener('input', function (e) {
+        var x = parseFloat(e.target.value); shots[i] = isNaN(x) ? 0 : Math.min(Math.max(x, 0), 0.99); update();
+      });
+      var b = d.querySelector('button'); if (b) b.addEventListener('click', function () { shots.splice(i, 1); render(); });
+      box.appendChild(d);
+    });
+    update();
+  }
+  function update() {
+    var sum = shots.reduce(function (a, b) { return a + b; }, 0);
+    var att = 1 - shots.reduce(function (a, b) { return a * (1 - b); }, 1);
+    document.getElementById('sum').textContent = sum.toFixed(2);
+    document.getElementById('att').textContent = att.toFixed(2);
+    document.getElementById('gap').textContent = att > 0 ? '+' + Math.round((sum / att - 1) * 100) + '%' : '0%';
+  }
+  document.getElementById('add').addEventListener('click', function () { if (shots.length < 8) { shots.push(0.10); render(); } });
+  render();
+})();
+</script>
+</body>
+</html>
